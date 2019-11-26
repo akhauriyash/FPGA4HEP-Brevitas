@@ -15,11 +15,11 @@ matplotlib.use('agg')
 
 parser = argparse.ArgumentParser(description='FPGANet FPGA4HEP Example')
 parser.add_argument('--batch-size', type=int, default=1024, metavar='N',
-                    help='input batch size for training (default: 64)')
+                    help='input batch size for training (default: 1024)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--epochs', type=int, default=100, metavar='N',
-                    help='number of epochs to train (default: 20)')
+                    help='number of epochs to train (default: 100)')
 parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                     help='learning rate (default: 0.1)')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
@@ -28,16 +28,6 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=1000, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--maxVal', type=float, default=1.61,
-                    help='maxVal')
-parser.add_argument('--SGD', action='store_true', default=False, 
-            help='Use SGD?')
-parser.add_argument('--no-softmax', action='store_false', default=True,
-                    help='add softmax at end')
-parser.add_argument('--fname', type=str, default='not_assigned',help='filename to save results')
-parser.add_argument('--folder', type=str, default='not_assigned',help='folder to save results to')
-parser.add_argument('--test', action='store_true', default=False,
-                    help='Only import model and test it (Graph ROC etc).')
 args = parser.parse_args()
 
 
@@ -64,20 +54,13 @@ if args.cuda:
 print(model)
 
 ## Optimizers
-if(args.SGD==True):
-    optimizer = optim.SGD(filter(lambda x: x.requires_grad, model.parameters()), lr=args.lr, momentum=args.momentum, weight_decay=0.0001)
-else:
-    optimizer = optim.Adam(filter(lambda x: x.requires_grad, model.parameters()), lr=args.lr, betas=(0.9, 0.999), weight_decay=0.0001)
-
-
-## Schedulers
+optimizer = optim.SGD(filter(lambda x: x.requires_grad, model.parameters()), lr=args.lr, momentum=args.momentum, weight_decay=0.0001)
+## Scheduler
 scheduler = optim.lr_scheduler.MultiStepLR(optimizer, [int(args.epochs*x/100) for x in [10, 20, 30, 40, 60, 80]])
-# scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, cooldown=2,patience=10, min_lr=0.0000001, eps=0.000001)
-# scheduler = CyclicCosAnnealingLR(optimizer, milestones=[6, 15, 36, 48, 72, 108, 144, 192, 240, 288], decay_milestones=[36, 72, 144, 288, 576], eta_min=1e-7)
-
 ## Criterion
 criterion = nn.CrossEntropyLoss().cuda()
 
+## Train Loop
 for epoch in range(0, args.epochs):
     scheduler.step()
     train(epoch)
@@ -85,10 +68,3 @@ for epoch in range(0, args.epochs):
 
 makeRoc(model, labels, name, test_loader, args.test, model.outwidth, model.outmaxval, args.folder)
 plt_conf_mat(model, labels, name, test_loader, args.test, model.outwidth, model.outmaxval, args.folder)
-
-
-# saved_model_import = torch.load("./saved_models_corrected/" + name + ".pth")
-# model_dict = model.state_dict()
-# pretrained_dict = {k: v for k, v in saved_model_import.items() if k in model_dict}
-# model_dict.update(pretrained_dict)
-# model.load_state_dict(model_dict)
