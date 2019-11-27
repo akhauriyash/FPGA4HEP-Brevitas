@@ -33,6 +33,8 @@ parser.add_argument('--cuda', type=bool, default=True,
                     help='Set CUDA')
 parser.add_argument('--name', type=str, default=None, 
                     help='Provide Model Name')
+parser.add_argument('--test', type=bool, default=False,
+                    help='Set True if testing')
 args = parser.parse_args()
 
 
@@ -74,10 +76,14 @@ if args.cuda==True:
     criterion = criterion.cuda()
 
 ## Train - Test Loop
-for epoch in range(args.epochs):
-    train(epoch, model, train_loader, criterion, optimizer, args)
+if(test==False):
+    for epoch in range(args.epochs):
+        train(epoch, model, train_loader, criterion, optimizer, args)
+        test(model, name, maxAcc, test_loader, criterion, optimizer, args)
+        scheduler.step()
+else:
+    model.load_state_dict(torch.load('./' + str(name) + '.pth'))
     test(model, name, maxAcc, test_loader, criterion, optimizer, args)
-    scheduler.step()
 
 ## Graphing
 makeRoc(model, labels, name, test_loader, args)
