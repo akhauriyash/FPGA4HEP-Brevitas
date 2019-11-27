@@ -6,6 +6,7 @@ from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import confusion_matrix
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from torch.autograd import Variable
 
 
 seed = 42
@@ -21,7 +22,7 @@ def makeRoc(net, labels, name, test_loader, args):
         zum += 1
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data, volatile=True), Variable(target)
+        data, target = Variable(data), Variable(target)
         output = net(data)
         tar = torch.squeeze(target)
         preds.append(output)
@@ -89,7 +90,7 @@ def plt_conf_mat(net, labels, name, test_loader, args):
     for data, target in test_loader:
         if args.cuda:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data, volatile=True), Variable(target)
+        data, target = Variable(data), Variable(target)
         output = net(data).max(1)[1]
         tar = torch.squeeze(target).max(1)[1]
         preds.append(output)
