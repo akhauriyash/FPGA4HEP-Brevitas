@@ -22,3 +22,12 @@ python train.py --batch-size      batchsize     (int)     \
                 --name            name          (string)  \
                 --test            test          (bool)
 ```
+
+## Requirements
+1. Python3
+2. PyTorch
+3. Brevitas
+4. Matplotlib>3.1.1 (For correct plotting of 
+5. Pandas
+6. scikit-learn 
+7. yaml
