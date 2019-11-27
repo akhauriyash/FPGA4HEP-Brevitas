@@ -31,6 +31,8 @@ parser.add_argument('--log-interval', type=int, default=1000, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--cuda', type=bool, default=True,
                     help='Set CUDA')
+parser.add_argument('--name', type=str, default=None, 
+                    help='Provide Model Name')
 args = parser.parse_args()
 
 
@@ -46,7 +48,10 @@ if(args.cuda==True):
     print("GPU in use", torch.cuda.is_available(), torch.cuda.current_device(), torch.cuda.device_count(), torch.cuda.get_device_name(torch.cuda.current_device()))
 kwargs = {'num_workers': 4, 'pin_memory': False} if args.cuda else {}
 
-name = 'FPGA4HEPmodel'
+if(args.name==None):
+    name = 'FPGA4HEPmodel'
+else:
+    name = args.name
 
 yamlConfig = parse_config('./yaml_IP_OP_config.yml')
 print("Reading dataset...")
