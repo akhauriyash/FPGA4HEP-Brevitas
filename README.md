@@ -27,7 +27,7 @@ python train.py --batch-size      batchsize     (int)     \
 1. Python3
 2. PyTorch
 3. Brevitas
-4. Matplotlib>3.1.1 (For correct plotting of 
+4. Matplotlib>3.1.1 (For correct plotting of Confusion Matrix)
 5. Pandas
 6. scikit-learn 
 7. yaml
