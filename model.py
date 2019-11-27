@@ -1,7 +1,8 @@
 from functools import reduce
 from operator import mul
 from torch.nn import Module, ModuleList, BatchNorm1d, Dropout
-from common import make_quant_linear, make_quant_hard_tanh, make_quant_relu
+from brevitas.core.quant import QuantType
+from common import make_quant_linear, make_quant_hard_tanh, make_quant_relu, make_activation
 import torch
 
 
@@ -15,36 +16,45 @@ class LFC(Module):
     def __init__(self, num_classes=5, weight_bit_width=None, act_bit_width=None,
                         in_bit_width=None):
         super(LFC, self).__init__()
+        self.num_classes      = num_classes
+        self.weight_bit_width = weight_bit_width
+        self.act_bit_width    = act_bit_width
+        self.in_bit_width     = in_bit_width
+        self.qtype   = QuantType.BINARY if weight_bit_width==1 else QuantType.INT
         self.metric  = 0 # Used for learning rate policy 'plateau'
-        self.act0    = make_quant_hard_tanh(act_bit_width)
+        self.act0    = make_activation(act_bit_width, 'hardtanh')
         self.linear1 = make_quant_linear(16, FC_OUT_FEATURES[0], 
+                                        weight_quant_type=self.qtype,
                                          bias=True, 
                                          bit_width=weight_bit_width)
         self.bn1     = BatchNorm1d(FC_OUT_FEATURES[0])
-        self.act1    = make_quant_relu(act_bit_width)
-        
+        self.act1    = make_activation(act_bit_width, 'relu')
+
         self.linear2 = make_quant_linear(FC_OUT_FEATURES[0],
                                          FC_OUT_FEATURES[1], 
+                                        weight_quant_type=self.qtype,
                                          bias=True, 
                                          bit_width=weight_bit_width)
         self.bn2     = BatchNorm1d(FC_OUT_FEATURES[1])
-        self.act2    = make_quant_relu(act_bit_width)
+        self.act2    = make_activation(act_bit_width, 'relu')
         
         self.linear3 = make_quant_linear(FC_OUT_FEATURES[1],
                                          FC_OUT_FEATURES[2],
+                                         weight_quant_type=self.qtype,
                                          bias=True, 
                                          bit_width=weight_bit_width)
         self.bn3     = BatchNorm1d(FC_OUT_FEATURES[2])
-        self.act3    = make_quant_relu(act_bit_width)
+        self.act3    = make_activation(act_bit_width, 'relu')
         
         self.linear4 = make_quant_linear(FC_OUT_FEATURES[2], 
                                          num_classes, 
+                                         weight_quant_type=self.qtype,
                                          bias=True, 
                                          bit_width=weight_bit_width)
         self.bn4     = BatchNorm1d(num_classes)
         self.act4    = torch.nn.LogSoftmax(dim=1)
 
-
+        
     def forward(self, x):
         x = x.view(-1, 16)
         x = self.act0(x)

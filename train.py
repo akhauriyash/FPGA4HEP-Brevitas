@@ -41,3 +41,4 @@ def test(model, name, maxAcc, test_loader, criterion, optimizer, args):
         print(".... Saving Model .....")
         torch.save(model.state_dict(), name + ".pth")
         maxAcc = step_acc
+    return maxAcc

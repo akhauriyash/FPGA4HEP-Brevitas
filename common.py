@@ -57,7 +57,6 @@ def make_quant_linear(in_channels,
 
 
 
-
 def make_quant_relu(bit_width,
                     quant_type=QUANT_TYPE,
                     scaling_impl_type=ACT_SCALING_IMPL_TYPE,
@@ -98,4 +97,13 @@ def make_quant_hard_tanh(bit_width,
                              min_val=-threshold,
                              per_channel_broadcastable_shape=per_channel_broadcastable_shape,
                              return_quant_tensor=return_quant_tensor)
+
+
+def make_activation(bit_width, type):
+  if type=='relu':
+    return make_quant_relu(bit_width, quant_type=QuantType.INT) if bit_width!=1 else make_quant_hard_tanh(bit_width, quant_type=QuantType.BINARY)
+  elif type=='hardtanh':
+    return make_quant_hard_tanh(bit_width, quant_type=QuantType.BINARY) if bit_width==1 else make_quant_hard_tanh(bit_width, quant_type=QuantType.INT)
+  else:
+    raise NotImplementedError
 

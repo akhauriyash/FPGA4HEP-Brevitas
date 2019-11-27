@@ -35,8 +35,12 @@ parser.add_argument('--name', type=str, default=None,
                     help='Provide Model Name')
 parser.add_argument('--test', type=bool, default=False,
                     help='Set True if testing')
+parser.add_argument('--gpu', type=int, default=None,
+                    help='which specific gpu to use')
 args = parser.parse_args()
 
+if args.gpu!=None:
+    torch.cuda.set_device(args.gpu)
 
 torch.manual_seed(args.seed)
 if args.cuda:
@@ -61,7 +65,7 @@ X_train_val, X_test, y_train_val, y_test, labels, train_loader, test_loader, inp
 
 dtype = torch.cuda.FloatTensor if args.cuda else torch.FloatTensor
 
-model = LFC(num_classes=5, weight_bit_width=4, act_bit_width=4, in_bit_width=4)
+model = LFC(num_classes=5, weight_bit_width=16, act_bit_width=16, in_bit_width=16)
 if args.cuda:
     model.cuda()
 print(model)
@@ -76,14 +80,15 @@ if args.cuda==True:
     criterion = criterion.cuda()
 
 ## Train - Test Loop
-if(test==False):
+if(args.test==False):
     for epoch in range(args.epochs):
         train(epoch, model, train_loader, criterion, optimizer, args)
-        test(model, name, maxAcc, test_loader, criterion, optimizer, args)
+        maxAcc = test(model, name, maxAcc, test_loader, criterion, optimizer, args)
         scheduler.step()
 else:
+    print("Loading model...")
     model.load_state_dict(torch.load('./' + str(name) + '.pth'))
-    test(model, name, maxAcc, test_loader, criterion, optimizer, args)
+    maxAcc = test(model, name, maxAcc, test_loader, criterion, optimizer, args)
 
 ## Graphing
 makeRoc(model, labels, name, test_loader, args)
