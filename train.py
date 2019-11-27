@@ -37,7 +37,7 @@ def test(model, name, maxAcc, test_loader, criterion, optimizer, args):
     test_string = "Loss - %.3f \t Accuracy - %.2f "
     loss_info = test_string % (test_loss.item(), step_acc)
     print(loss_info)
-    if(maxAcc<step_acc):
+    if(maxAcc<step_acc and args.test==False):
         print(".... Saving Model .....")
         torch.save(model.state_dict(), name + ".pth")
         maxAcc = step_acc

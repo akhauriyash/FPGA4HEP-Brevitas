@@ -102,6 +102,7 @@ def plt_conf_mat(net, labels, name, test_loader, args):
     cnf_matrix = confusion_matrix(preds, truth)
     np.set_printoptions(precision=2)
     plt.figure()
+    # plt.ylim(4.5, -0.5)
     plot_confusion_matrix(cnf_matrix, classes=[l.replace('j_','') for l in labels],
                               title='Confusion matrix')
     plt.figtext(0.28, 0.90,'hls4ml', wrap=True, horizontalalignment='right', fontsize=4)

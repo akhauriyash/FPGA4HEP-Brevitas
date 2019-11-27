@@ -61,7 +61,7 @@ X_train_val, X_test, y_train_val, y_test, labels, train_loader, test_loader, inp
 
 dtype = torch.cuda.FloatTensor if args.cuda else torch.FloatTensor
 
-model = LFC(num_classes=5, weight_bit_width=2, act_bit_width=2, in_bit_width=2)
+model = LFC(num_classes=5, weight_bit_width=4, act_bit_width=4, in_bit_width=4)
 if args.cuda:
     model.cuda()
 print(model)
