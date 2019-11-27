@@ -10,7 +10,8 @@ https://cernbox.cern.ch/index.php/s/jvFd5MoWhGs1l5v
 ## Training and evaluation
 
 For training or testing:
-``` python train.py --batch-size batchsize          (int)     \
+``` 
+    python train.py --batch-size batchsize          (int)     \
                     --test-batch-size testbatchsize (int)     \
                     --epochs epochs                 (int)     \ 
                     --lr lr                         (float)   \
