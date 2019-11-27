@@ -1,26 +1,13 @@
 from __future__ import print_function
-import time, sys, os, itertools, h5py, yaml, matplotlib, argparse, torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from functools import reduce
-from torchvision import datasets, transforms
-from torch.autograd import Variable
-from brevitas.nn.quant_linear import QuantLinear
-from brevitas.nn.quant_activation import QuantReLU
-from brevitas.nn.quant_activation import QuantHardTanh
-from brevitas.core.quant import QuantType
+import os, h5py, yaml, torch
 import numpy as np
-seed = 42
-np.random.seed(seed)
-from optparse import OptionParser
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
-from sklearn.metrics import roc_curve, auc
-from sklearn.metrics import confusion_matrix
-matplotlib.use('agg')
-import matplotlib.pyplot as plt
+
+seed = 42
+np.random.seed(seed)
+
 
 def chunks(l, n):
     for i in range(0, len(l), n):
@@ -93,16 +80,23 @@ def get_features(yamlConfig, batch_size, test_batch_size):
             X_test[:,p,:] = scaler.transform(X_test[:,p,:])
     if 'j_index' in labels:
         labels = labels[:-1]
+
     input_shape = X_train_val.shape[1:]
     output_shape = y_train_val.shape[1]
+
     X_train_val = np.stack(list(chunks(X_train_val, batch_size))[:-1])
     y_train_val = np.stack(list(chunks(y_train_val, batch_size))[:-1])
-    X_test      = np.stack(list(chunks(X_test,        test_batch_size))[:-1])
-    y_test          = np.stack(list(chunks(y_test,    test_batch_size))[:-1])
+    
+    X_test      = np.stack(list(chunks(X_test,      test_batch_size))[:-1])
+    y_test      = np.stack(list(chunks(y_test,      test_batch_size))[:-1])
+    
     X_train_val = torch.unsqueeze(torch.tensor(torch.from_numpy(X_train_val), dtype=torch.float), dim=2)
     X_test = torch.unsqueeze(torch.tensor(torch.from_numpy(X_test), dtype=torch.float), dim=2)
+    
     y_train_val = torch.unsqueeze(torch.tensor(torch.from_numpy(y_train_val), dtype=torch.float), dim=2)
     y_test = torch.unsqueeze(torch.tensor(torch.from_numpy(y_test), dtype=torch.float), dim=2)
+    
     train_loader = list(zip(X_train_val, y_train_val))
     test_loader  = list(zip(X_test, y_test))
+    
     return X_train_val, X_test, y_train_val, y_test, labels, train_loader, test_loader, input_shape, output_shape

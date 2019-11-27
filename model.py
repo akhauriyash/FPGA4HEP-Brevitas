@@ -5,7 +5,7 @@ from common import make_quant_linear, make_quant_hard_tanh, make_quant_relu
 import torch
 
 
-FC_OUT_FEATURES = [32, 64, 64]
+FC_OUT_FEATURES = [64, 32, 32]
 INTERMEDIATE_FC_PER_OUT_CH_SCALING = True
 LAST_FC_PER_OUT_CH_SCALING = False
 IN_DROPOUT = 0.0
@@ -42,7 +42,7 @@ class LFC(Module):
                                          bias=True, 
                                          bit_width=weight_bit_width)
         self.bn4     = BatchNorm1d(num_classes)
-        self.act4    = torch.nn.LogSoftmax()
+        self.act4    = torch.nn.LogSoftmax(dim=1)
 
 
     def forward(self, x):

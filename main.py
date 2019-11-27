@@ -1,6 +1,5 @@
 from __future__ import print_function
 import time, os, matplotlib, argparse, torch
-from torch.autograd import Variable
 import torch.nn as nn
 import numpy as np
 import torch.optim as optim
@@ -10,6 +9,8 @@ from get_features import get_features
 from graphing import makeRoc, plot_confusion_matrix, plt_conf_mat
 from util import counter, counter_fanout, parse_config
 from train import train, test
+from model import LFC
+
 
 matplotlib.use('agg')
 
@@ -28,16 +29,21 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=1000, metavar='N',
                     help='how many batches to wait before logging training status')
+parser.add_argument('--cuda', type=bool, default=True,
+                    help='Set CUDA')
 args = parser.parse_args()
 
 
-args.cuda = True
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
+
+
 global maxAcc
 maxAcc = 0
-print("GPU in use", torch.cuda.is_available(), torch.cuda.current_device(), torch.cuda.device_count(), torch.cuda.get_device_name(torch.cuda.current_device()))
+
+if(args.cuda==True):
+    print("GPU in use", torch.cuda.is_available(), torch.cuda.current_device(), torch.cuda.device_count(), torch.cuda.get_device_name(torch.cuda.current_device()))
 kwargs = {'num_workers': 4, 'pin_memory': False} if args.cuda else {}
 
 name = 'FPGA4HEPmodel'
@@ -48,7 +54,7 @@ X_train_val, X_test, y_train_val, y_test, labels, train_loader, test_loader, inp
 
 dtype = torch.cuda.FloatTensor if args.cuda else torch.FloatTensor
 
-model = Net()
+model = LFC(num_classes=5, weight_bit_width=2, act_bit_width=2, in_bit_width=2)
 if args.cuda:
     model.cuda()
 print(model)
@@ -58,13 +64,16 @@ optimizer = optim.SGD(filter(lambda x: x.requires_grad, model.parameters()), lr=
 ## Scheduler
 scheduler = optim.lr_scheduler.MultiStepLR(optimizer, [int(args.epochs*x/100) for x in [10, 20, 30, 40, 60, 80]])
 ## Criterion
-criterion = nn.CrossEntropyLoss().cuda()
+criterion = nn.CrossEntropyLoss()
+if args.cuda==True:
+    criterion = criterion.cuda()
 
-## Train Loop
-for epoch in range(0, args.epochs):
+## Train - Test Loop
+for epoch in range(args.epochs):
+    train(epoch, model, train_loader, criterion, optimizer, args)
+    test(model, name, maxAcc, test_loader, criterion, optimizer, args)
     scheduler.step()
-    train(epoch)
-    test()
 
-makeRoc(model, labels, name, test_loader, args.test, model.outwidth, model.outmaxval, args.folder)
-plt_conf_mat(model, labels, name, test_loader, args.test, model.outwidth, model.outmaxval, args.folder)
+## Graphing
+makeRoc(model, labels, name, test_loader, args)
+plt_conf_mat(model, labels, name, test_loader, args)
