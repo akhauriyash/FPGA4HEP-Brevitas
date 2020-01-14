@@ -1,5 +1,12 @@
 # FPGA4HEP-Brevitas
-Jet Classification and Regression training in Brevitas
+Jet Classification and Regression training in Brevitas, using quantized weights and activations.
+
+| Layers           	| Quantization                   	| Average AUC% 	|
+|------------------	|--------------------------------	|--------------	|
+| 64fc, 32fc, 32fc 	| 16-bit weights and activations 	| 93.9         	|
+| 64fc, 32fc, 32fc 	| 4-bit weights and activations  	| 92.46        	|
+| 64fc, 32fc, 32fc 	| 2-bit weights and activatinos  	| 89.26        	|
+| 64fc, 32fc, 32fc 	| 1-bit weights and activations  	| 21.94        	|
 
 
 ## Data
